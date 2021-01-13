@@ -1,7 +1,7 @@
 import * as http from 'http';
-import {Socket} from 'net';
+import { Socket } from 'net';
 
-import {bodyReader, Resolvable} from './utils';
+import { bodyReader, Resolvable } from './utils';
 
 export interface MockHttpServerOptions {
   port: number;
@@ -18,7 +18,11 @@ function generatePort(): number {
   return Math.floor(4000 + Math.random() * 4000);
 }
 
-export type RequestHandler = (request: http.IncomingMessage, response: http.ServerResponse, error?: Error) => void;
+export type RequestHandler = (
+  request: http.IncomingMessage,
+  response: http.ServerResponse,
+  error?: Error
+) => void;
 
 interface RequestMapEntry {
   request: http.IncomingMessage;
@@ -30,7 +34,7 @@ interface RequestMapEntry {
 class MockHttpServerImpl implements MockHttpServer {
   private _server?: http.Server;
   private _promiseStart?: Resolvable<this>;
-  private _requestHandlers: {path: string; handler: RequestHandler}[] = [];
+  private _requestHandlers: { path: string; handler: RequestHandler }[] = [];
   private _activeResponses: http.ServerResponse[] = [];
   private _running = false;
   private _connections: Socket[] = [];
@@ -67,10 +71,13 @@ class MockHttpServerImpl implements MockHttpServer {
 
     this._server = http.createServer((request, response) => {
       const path = `/${String(request.url).split(/\//)[1] ?? ''}`;
-      const handlers = this._requestHandlers.filter((h) => h.path === path);
+      const handlers = this._requestHandlers.filter(h => h.path === path);
 
       // Всегда и сразу разрешаем CORS
-      response.setHeader('access-control-allow-origin', request.headers.origin ?? '*');
+      response.setHeader(
+        'access-control-allow-origin',
+        request.headers.origin ?? '*'
+      );
 
       for (const handler of handlers) {
         handler.handler(request, response);
@@ -83,11 +90,11 @@ class MockHttpServerImpl implements MockHttpServer {
       this._promiseStart?.resolve(this);
     });
 
-    this._server.on('connection', (conn) => {
+    this._server.on('connection', conn => {
       this._connections.push(conn);
 
       conn.on('close', () => {
-        this._connections = this._connections.filter((c) => c !== conn);
+        this._connections = this._connections.filter(c => c !== conn);
       });
     });
 
@@ -119,7 +126,7 @@ class MockHttpServerImpl implements MockHttpServer {
     // Обработчик запроса выстреливает один раз
     const handler: RequestHandler = (request, response, error) => {
       this._removeRequestHandler(handler);
-      this._activeResponses = this._activeResponses.filter((r) => r !== response);
+      this._activeResponses = this._activeResponses.filter(r => r !== response);
 
       if (error) {
         resolvable.reject(error);
@@ -135,18 +142,18 @@ class MockHttpServerImpl implements MockHttpServer {
 
         // Тут тело запроса парсится
         body(encoding?: BufferEncoding): Promise<any> {
-          return body().then((buffer) => {
+          return body().then(buffer => {
             if (encoding === undefined) {
               return buffer;
             } else {
               return buffer.toString(encoding);
             }
           });
-        }
+        },
       });
     };
 
-    this._requestHandlers.push({path, handler});
+    this._requestHandlers.push({ path, handler });
 
     // Setting up rejection by timeout
     const timer = setTimeout(() => {
@@ -155,25 +162,29 @@ class MockHttpServerImpl implements MockHttpServer {
     }, this._options.timeout);
 
     return resolvable.promise
-        .then((result) => [null, result])
-        .catch((error) => [error, null])
-        .then(([error, result]) => {
-          clearTimeout(timer);
+      .then(result => [null, result])
+      .catch(error => [error, null])
+      .then(([error, result]) => {
+        clearTimeout(timer);
 
-          if (error) {
-            return Promise.reject(error);
-          } else {
-            return Promise.resolve(result);
-          }
-        });
+        if (error) {
+          return Promise.reject(error);
+        } else {
+          return Promise.resolve(result);
+        }
+      });
   }
 
   private _removeRequestHandler(handler: RequestHandler) {
-    this._requestHandlers = this._requestHandlers.filter((h) => h.handler !== handler);
+    this._requestHandlers = this._requestHandlers.filter(
+      h => h.handler !== handler
+    );
   }
 }
 
-function mockHttpServer(options: Partial<MockHttpServerOptions> = {}): MockHttpServerImpl {
+function mockHttpServer(
+  options: Partial<MockHttpServerOptions> = {}
+): MockHttpServerImpl {
   return new MockHttpServerImpl({
     ...options,
     port: options.port ?? generatePort(),
@@ -181,7 +192,9 @@ function mockHttpServer(options: Partial<MockHttpServerOptions> = {}): MockHttpS
   });
 }
 
-export function useMockHttpServer(options: Partial<MockHttpServerOptions> = {}): MockHttpServer {
+export function useMockHttpServer(
+  options: Partial<MockHttpServerOptions> = {}
+): MockHttpServer {
   const server = mockHttpServer(options);
 
   beforeEach(() => {
