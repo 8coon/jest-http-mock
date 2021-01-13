@@ -197,12 +197,12 @@ export function useMockHttpServer(
 ): MockHttpServer {
   const server = mockHttpServer(options);
 
-  beforeEach(() => {
+  beforeAll(() => {
     server.clear();
     return server.start();
   });
 
-  afterEach(() => {
+  afterAll(() => {
     return server.stop();
   });
 
