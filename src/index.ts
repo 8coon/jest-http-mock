@@ -71,7 +71,9 @@ class MockHttpServerImpl implements MockHttpServer {
 
     this._server = http.createServer((request, response) => {
       const url = new URL(request.url ?? '', this.host);
-      const handlers = this._requestHandlers.filter(h => h.path === url.pathname);
+      const handlers = this._requestHandlers.filter(
+        h => h.path === url.pathname
+      );
 
       // Всегда и сразу разрешаем CORS
       response.setHeader(
