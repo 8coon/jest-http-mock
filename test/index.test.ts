@@ -48,6 +48,18 @@ describe('mockHttpServer', () => {
 
       return expect(result).rejects.toThrow('network timeout');
     });
+
+    test('long path', async () => {
+      const requestPromise = server.waitForRequest('/api/b/c');
+
+      const result = fetch(`${server.host}/api/b/c`);
+      const { response } = await requestPromise;
+
+      response.writeHead(200);
+      response.end();
+
+      expect((await result).status).toEqual(200);
+    });
   });
 
   describe('order', () => {

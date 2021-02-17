@@ -70,8 +70,8 @@ class MockHttpServerImpl implements MockHttpServer {
     this._promiseStart = new Resolvable<this>();
 
     this._server = http.createServer((request, response) => {
-      const path = `/${String(request.url).split(/\//)[1] ?? ''}`;
-      const handlers = this._requestHandlers.filter(h => h.path === path);
+      const url = new URL(request.url ?? '', this.host);
+      const handlers = this._requestHandlers.filter(h => h.path === url.pathname);
 
       // Всегда и сразу разрешаем CORS
       response.setHeader(
