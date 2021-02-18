@@ -221,12 +221,12 @@ export function useMockHttpServer(
 ): MockHttpServer {
   const server = mockHttpServer(options);
 
-  beforeAll(() => {
+  beforeEach(() => {
     server.clear();
     return server.start();
   });
 
-  afterAll(() => {
+  afterEach(() => {
     return server.stop();
   });
 
