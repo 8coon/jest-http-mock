@@ -35,6 +35,10 @@
   "author": "Sergey Peshkov",
   "homepage": "https://github.com/8coon/jest-http-mock",
   "module": "dist/jest-http-mock.esm.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/8coon/jest-http-mock.git"
+  },
   "size-limit": [
     {
       "path": "dist/jest-http-mock.cjs.production.min.js",
