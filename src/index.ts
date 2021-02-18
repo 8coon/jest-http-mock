@@ -12,6 +12,7 @@ export interface MockHttpServer {
   readonly port: number;
   readonly host: string;
   waitForRequest(path: string): Promise<RequestMapEntry>;
+  stopWaiting(requestPromise: Promise<RequestMapEntry>): void;
 }
 
 function generatePort(): number {
@@ -31,10 +32,17 @@ interface RequestMapEntry {
   body(): Promise<Buffer>;
 }
 
+interface RequestHandlerEntry {
+  path: string;
+  handler: RequestHandler;
+  resolvable: Resolvable<RequestMapEntry>;
+  promise?: Promise<RequestMapEntry>;
+}
+
 class MockHttpServerImpl implements MockHttpServer {
   private _server?: http.Server;
   private _promiseStart?: Resolvable<this>;
-  private _requestHandlers: { path: string; handler: RequestHandler }[] = [];
+  private _requestHandlers: RequestHandlerEntry[] = [];
   private _activeResponses: http.ServerResponse[] = [];
   private _running = false;
   private _connections: Socket[] = [];
@@ -155,7 +163,8 @@ class MockHttpServerImpl implements MockHttpServer {
       });
     };
 
-    this._requestHandlers.push({ path, handler });
+    const entry: RequestHandlerEntry = { path, handler, resolvable };
+    this._requestHandlers.push(entry);
 
     // Setting up rejection by timeout
     const timer = setTimeout(() => {
@@ -163,7 +172,7 @@ class MockHttpServerImpl implements MockHttpServer {
       resolvable.reject(new Error('Timed out'));
     }, this._options.timeout);
 
-    return resolvable.promise
+    entry.promise = resolvable.promise
       .then(result => [null, result])
       .catch(error => [error, null])
       .then(([error, result]) => {
@@ -175,6 +184,19 @@ class MockHttpServerImpl implements MockHttpServer {
           return Promise.resolve(result);
         }
       });
+
+    return entry.promise;
+  }
+
+  stopWaiting(requestPromise: Promise<RequestMapEntry>): void {
+    this._requestHandlers = this._requestHandlers.filter((handler) => {
+      if (handler.promise === requestPromise) {
+        handler.resolvable.reject(new Error('Cancelled'));
+        return false;
+      }
+
+      return true;
+    })
   }
 
   private _removeRequestHandler(handler: RequestHandler) {

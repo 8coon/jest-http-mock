@@ -83,4 +83,27 @@ describe('mockHttpServer', () => {
       await expect(requests).resolves.toBeTruthy();
     });
   });
+
+  describe('cancelling', () => {
+    const server = useMockHttpServer();
+
+    test('cancel request', async () => {
+      const requestPromise = server.waitForRequest('/test');
+      server.stopWaiting(requestPromise);
+
+      // TODO: Figure why reject counts as unhandled rejection
+      const requestPromiseWrap = new Promise((resolve) => {
+        requestPromise.catch((e) => resolve(e));
+      });
+
+      const result = fetch(`${server.host}/test`, {
+        method: 'POST',
+        body: 'test_body',
+        timeout: 1,
+      });
+
+      await expect(result).rejects.toThrow('network timeout');
+      await expect(requestPromiseWrap).resolves.toThrow('Cancelled');
+    });
+  });
 });
