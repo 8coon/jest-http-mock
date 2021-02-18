@@ -189,14 +189,14 @@ class MockHttpServerImpl implements MockHttpServer {
   }
 
   stopWaiting(requestPromise: Promise<RequestMapEntry>): void {
-    this._requestHandlers = this._requestHandlers.filter((handler) => {
+    this._requestHandlers = this._requestHandlers.filter(handler => {
       if (handler.promise === requestPromise) {
         handler.resolvable.reject(new Error('Cancelled'));
         return false;
       }
 
       return true;
-    })
+    });
   }
 
   private _removeRequestHandler(handler: RequestHandler) {

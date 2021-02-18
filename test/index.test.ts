@@ -92,8 +92,8 @@ describe('mockHttpServer', () => {
       server.stopWaiting(requestPromise);
 
       // TODO: Figure why reject counts as unhandled rejection
-      const requestPromiseWrap = new Promise((resolve) => {
-        requestPromise.catch((e) => resolve(e));
+      const requestPromiseWrap = new Promise(resolve => {
+        requestPromise.catch(e => resolve(e));
       });
 
       const result = fetch(`${server.host}/test`, {
